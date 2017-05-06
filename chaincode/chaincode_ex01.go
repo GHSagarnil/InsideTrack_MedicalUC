@@ -108,10 +108,20 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 
 //Create Patient
 func (t *SimpleChaincode) createPatient(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-if len(args) != 9 {
+if len(args) != 4 {
 			return nil, fmt.Errorf("Incorrect number of arguments. Expecting 4. Got: %d.", len(args))
 		}
-		
+/*		
+		patientId:= args[2]
+		patientFirstName:=args[0]
+		patientLastName:=args[1]
+		patientAdhaarNo:=args[2]
+		patientDOB:=args[3]
+		patientCreationDate:= "2006-01-02"
+		patientCreatedBy:= "TestUser1"
+		patientLastUpdatedOn:= "2006-01-02"
+		patientLastUpdatedBy:= "TestUser1"
+*/		
 		patientId:= strconv.Itoa(rand.Intn(1000000000))
 		patientFirstName:=args[0]
 		patientLastName:=args[1]
@@ -121,7 +131,6 @@ if len(args) != 9 {
 		patientCreatedBy:= "TestUser1"
 		patientLastUpdatedOn:= time.Now().Local().Format("2006-01-02")
 		patientLastUpdatedBy:= "TestUser1"
-		
 
 		// Insert a row
 		ok, err := stub.InsertRow("Patient", shim.Row{
