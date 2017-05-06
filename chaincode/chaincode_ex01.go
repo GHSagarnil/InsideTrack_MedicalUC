@@ -6,10 +6,10 @@ package main
 import (
 	"errors"
 	"fmt"
-	//"strconv"
+	"strconv"
 	"encoding/json"
 	"time"
-   // "math/rand"
+    "math/rand"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	//"github.com/hyperledger/fabric/core/crypto/primitives"
@@ -111,18 +111,8 @@ func (t *SimpleChaincode) createPatient(stub shim.ChaincodeStubInterface, args [
 if len(args) != 4 {
 			return nil, fmt.Errorf("Incorrect number of arguments. Expecting 4. Got: %d.", len(args))
 		}
-/*		
-		patientId:= args[2]
-		patientFirstName:=args[0]
-		patientLastName:=args[1]
-		patientAdhaarNo:=args[2]
-		patientDOB:=args[3]
-		patientCreationDate:= "2006-01-02"
-		patientCreatedBy:= "TestUser1"
-		patientLastUpdatedOn:= "2006-01-02"
-		patientLastUpdatedBy:= "TestUser1"
-*/		
-		patientId:= args[2] //strconv.Itoa(rand.Intn(1000000000))
+
+		patientId:= strconv.Itoa(rand.Intn(1000000000))
 		patientFirstName:=args[0]
 		patientLastName:=args[1]
 		patientAdhaarNo:=args[2]
@@ -157,7 +147,64 @@ if len(args) != 4 {
 
 }
 
+//Update Patient
+// UI to send all parameters except for Update related Columns
+func (t *SimpleChaincode) updatePatient(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 
+	if len(args) != 7 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 7.")
+	}
+
+		patientId:= args[0]
+		patientFirstName:=args[1]
+		patientLastName:=args[2]
+		patientAdhaarNo:=args[3]
+		patientDOB:=args[4]
+		patientCreationDate:= args[5]
+		patientCreatedBy:= args[6]
+		patientLastUpdatedOn:= time.Now().Local().Format("2006-01-02")
+		patientLastUpdatedBy:= "TestUser1"
+	
+	// Get the row pertaining to this ffid
+	var columns []shim.Column
+	col1 := shim.Column{Value: &shim.Column_String_{String_: patientId}}
+	columns = append(columns, col1)
+
+
+	////Delete the row
+	// Delete the row pertaining to this PatientID
+	err := stub.DeleteRow(
+		"Patient",
+		columns,
+	)
+	if err != nil {
+		return nil, errors.New("Failed deleting row.")
+	}
+
+	// Insert new row
+		ok, err1 := stub.InsertRow("Patient", shim.Row{
+			Columns: []*shim.Column{
+				&shim.Column{Value: &shim.Column_String_{String_: patientId}},
+				&shim.Column{Value: &shim.Column_String_{String_: patientFirstName}},
+				&shim.Column{Value: &shim.Column_String_{String_: patientLastName}},
+				&shim.Column{Value: &shim.Column_String_{String_: patientAdhaarNo}},
+				&shim.Column{Value: &shim.Column_String_{String_: patientDOB}},
+				&shim.Column{Value: &shim.Column_String_{String_: patientCreationDate}},
+				&shim.Column{Value: &shim.Column_String_{String_: patientCreatedBy}},
+				&shim.Column{Value: &shim.Column_String_{String_: patientLastUpdatedOn}},
+				&shim.Column{Value: &shim.Column_String_{String_: patientLastUpdatedBy}},
+			}})
+
+		if err1 != nil {
+			return nil, err1 
+		}
+		if !ok && err1 == nil {
+			return nil, errors.New("Row already exists.")
+		}
+			
+		return nil, nil
+
+}
 
 // Invoke callback representing the invocation of a chaincode
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
@@ -170,6 +217,9 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 	} else if function == "createPatient" {
 		fmt.Printf("Function is createPatient")
 		return t.createPatient(stub, args)
+	} else if function == "updatePatient" {
+		fmt.Printf("Function is updatePatient")
+		return t.updatePatient(stub, args)
 	} 
 
 	return nil, errors.New("Received unknown function invocation")
@@ -185,6 +235,9 @@ func (t* SimpleChaincode) Run(stub shim.ChaincodeStubInterface, function string,
 	} else if function == "createPatient" {
 		fmt.Printf("Function is createPatient")
 		return t.createPatient(stub, args)
+	} else if function == "updatePatient" {
+		fmt.Printf("Function is updatePatient")
+		return t.updatePatient(stub, args)
 	} 
 
 	return nil, errors.New("Received unknown function invocation")
@@ -228,8 +281,7 @@ var columns []shim.Column
 
 }
 
-
-//get the AssemblyLine against ID
+//get the Patient against ID
 func (t *SimpleChaincode) getPatientByID(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 
 	if len(args) != 1 {
@@ -265,7 +317,48 @@ func (t *SimpleChaincode) getPatientByID(stub shim.ChaincodeStubInterface, args 
 }
 
 
+//get Patient by Adhaar Number
+// Returns empty string if not found
+func (t *SimpleChaincode) getPatientByAdhaarNumber(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {	
+var columns []shim.Column
 
+	
+	if len(args) != 1 {
+		return nil, errors.New("Incorrect number of arguments. Expecting PatientAdhaarNumber to query")
+	}
+
+	_patientAdhaarNumber := args[0]
+	
+	rows, err := stub.GetRows("Patient", columns)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to retrieve row")
+	}
+		
+	res2E:= []*Patient{}	
+	
+	for row := range rows {		
+		newApp:= new(Patient)
+		newApp.PatientId = row.Columns[0].GetString_()
+		newApp.PatientFirstName = row.Columns[1].GetString_()
+		newApp.PatientLastName = row.Columns[2].GetString_()
+		newApp.PatientAdhaarNo = row.Columns[3].GetString_()
+		newApp.PatientDOB = row.Columns[4].GetString_()
+		newApp.PatientCreationDate = row.Columns[5].GetString_()
+		newApp.PatientCreatedBy = row.Columns[6].GetString_()
+		newApp.PatientLastUpdatedOn = row.Columns[7].GetString_()
+		newApp.PatientLastUpdatedBy = row.Columns[8].GetString_()
+		
+		if newApp.PatientAdhaarNo == _patientAdhaarNumber {
+		res2E=append(res2E,newApp)		
+		}					
+	}
+	
+    mapB, _ := json.Marshal(res2E)
+    fmt.Println(string(mapB))
+	
+	return mapB, nil
+
+}
 
 // query queries the chaincode
 func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
@@ -274,7 +367,13 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 	if function == "getAllPatients" { 
 		t := SimpleChaincode{}
 		return t.getAllPatients(stub, args)
-	} 
+	} else if function == "getPatientByAdhaarNumber" { 
+		t := SimpleChaincode{}
+		return t.getPatientByAdhaarNumber(stub, args)
+	} else if function == "getPatientByID" { 
+		t := SimpleChaincode{}
+		return t.getPatientByID(stub, args)
+	}
 	
 	return nil, errors.New("Received unknown function query")
 }
