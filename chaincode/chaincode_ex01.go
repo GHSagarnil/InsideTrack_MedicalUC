@@ -122,7 +122,7 @@ if len(args) != 4 {
 		patientLastUpdatedOn:= "2006-01-02"
 		patientLastUpdatedBy:= "TestUser1"
 */		
-		patientId:= strconv.Itoa(rand.Intn(1000000000))
+		patientId:= args[2] //strconv.Itoa(rand.Intn(1000000000))
 		patientFirstName:=args[0]
 		patientLastName:=args[1]
 		patientAdhaarNo:=args[2]
@@ -227,6 +227,44 @@ var columns []shim.Column
 	return mapB, nil
 
 }
+
+
+//get the AssemblyLine against ID
+func (t *SimpleChaincode) getPatientByID(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+
+	if len(args) != 1 {
+		return nil, errors.New("Incorrect number of arguments. Expecting PatientID to query")
+	}
+
+	patientID := args[0]
+	
+
+	// Get the row pertaining to this assemblyLineID
+	var columns []shim.Column
+	col1 := shim.Column{Value: &shim.Column_String_{String_: patientID}}
+	columns = append(columns, col1)
+
+	row, err := stub.GetRow("Patient", columns)
+	if err != nil {
+		jsonResp := "{\"Error\":\"Failed to get the data for the patientID " + patientID + "\"}"
+		return nil, errors.New(jsonResp)
+	}
+
+	// GetRows returns empty message if key does not exist
+	if len(row.Columns) == 0 {
+		jsonResp := "{\"Error\":\"Failed to get the data for the patientID " + patientID + "\"}"
+		return nil, errors.New(jsonResp)
+	}
+
+	//return []byte (row), nil
+	 mapB, _ := json.Marshal(row)
+    fmt.Println(string(mapB))
+	
+	return mapB, nil
+
+}
+
+
 
 
 // query queries the chaincode
