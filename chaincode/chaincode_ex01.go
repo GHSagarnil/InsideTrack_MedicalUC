@@ -36,14 +36,15 @@ type Patient struct{
 type MedicalRecord struct{	
 	MedicalRecordID string `json:"medicalRecordID"`
 	MedicalRecord_PatientID string `json:"medicalRecord_PatientID"`
-	MedicalRecordType string `json:"medicalRecordType"`
-	MedicalRecordOPDDate string `json:"medicalRecordOPDDate"`
+	MedicalRecordHopsitalName string `json:"medicalRecordHopsitalName"`
+	MedicalRecordHospitalRegistrationID string `json:"medicalRecordHospitalRegistrationID"`
 	MedicalRecordHospitalizationStartDate string `json:"medicalRecordHospitalizationStartDate"`
 	MedicalRecordHospitalizationDischargeDate string `json:"medicalRecordHospitalizationDischargeDate"`
 	MedicalRecordDiagnosis string `json:"medicalRecordDiagnosis"`
 	MedicalRecordTreatment string `json:"medicalRecordTreatment"`
 	MedicalRecordDoctorFirstName string `json:"medicalRecordDoctorFirstName"`
 	MedicalRecordDoctorLastName string `json:"medicalRecordDoctorLastName"`
+	MedicalRecordDoctorRegistrationNumber string `json:"medicalRecordDoctorRegistrationNumber"`
 	MedicalRecordCreationDate string `json:"medicalRecordCreationDate"`
 	MedicalRecordCreatedBy string `json:"medicalRecordCreatedBy"`
 	MedicalRecordLastUpdatedOn string `json:"medicalRecordLastUpdatedOn"`
@@ -84,7 +85,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	fmt.Printf("Init called, initializing chaincode")
 	
 	
-	// Create application Table
+	// Create Patient Table
 	err := stub.CreateTable("Patient", []*shim.ColumnDefinition{
 		&shim.ColumnDefinition{Name: "patientId", Type: shim.ColumnDefinition_STRING, Key: true},
 		&shim.ColumnDefinition{Name: "patientFirstName", Type: shim.ColumnDefinition_STRING, Key: false},
@@ -101,39 +102,76 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 		return nil, errors.New("Failed creating Patient.")
 	}
 
+
+// Create Medical Record Table
+	err = stub.CreateTable("MedicalRecord", []*shim.ColumnDefinition{
+		&shim.ColumnDefinition{Name: "medicalRecordID", Type: shim.ColumnDefinition_STRING, Key: true},
+		&shim.ColumnDefinition{Name: "medicalRecord_PatientID", Type: shim.ColumnDefinition_STRING, Key: false},
+		&shim.ColumnDefinition{Name: "medicalRecordHopsitalName", Type: shim.ColumnDefinition_STRING, Key: false},
+		&shim.ColumnDefinition{Name: "medicalRecordHospitalRegistrationID", Type: shim.ColumnDefinition_STRING, Key: false},
+		&shim.ColumnDefinition{Name: "medicalRecordHospitalizationStartDate", Type: shim.ColumnDefinition_STRING, Key: false},
+		&shim.ColumnDefinition{Name: "medicalRecordHospitalizationDischargeDate", Type: shim.ColumnDefinition_STRING, Key: false},
+		&shim.ColumnDefinition{Name: "medicalRecordDiagnosis", Type: shim.ColumnDefinition_STRING, Key: false},
+		&shim.ColumnDefinition{Name: "medicalRecordTreatment", Type: shim.ColumnDefinition_STRING, Key: false},
+		&shim.ColumnDefinition{Name: "medicalRecordDoctorFirstName", Type: shim.ColumnDefinition_STRING, Key: false},
+		&shim.ColumnDefinition{Name: "medicalRecordDoctorLastName", Type: shim.ColumnDefinition_STRING, Key: false},
+		&shim.ColumnDefinition{Name: "medicalRecordDoctorRegistrationNumber", Type: shim.ColumnDefinition_STRING, Key: false},
+		&shim.ColumnDefinition{Name: "medicalRecordCreationDate", Type: shim.ColumnDefinition_STRING, Key: false},
+		&shim.ColumnDefinition{Name: "medicalRecordCreatedBy", Type: shim.ColumnDefinition_STRING, Key: false},
+		&shim.ColumnDefinition{Name: "medicalRecordLastUpdatedOn", Type: shim.ColumnDefinition_STRING, Key: false},
+		&shim.ColumnDefinition{Name: "medicalRecordLastUpdatedBy", Type: shim.ColumnDefinition_STRING, Key: false},
+
+	})
+	if err != nil {
+		return nil, errors.New("Failed creating MedicalRecord.")
+	}
+
+
+
 	return nil, nil
 }
 
 
-
 //Create Patient
-func (t *SimpleChaincode) createPatient(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-if len(args) != 4 {
-			return nil, fmt.Errorf("Incorrect number of arguments. Expecting 4. Got: %d.", len(args))
+func (t *SimpleChaincode) createMedicalRecord(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+if len(args) != 10 {
+			return nil, fmt.Errorf("Incorrect number of arguments. Expecting 10. Got: %d.", len(args))
 		}
 
-		patientId:= strconv.Itoa(rand.Intn(1000000000))
-		patientFirstName:=args[0]
-		patientLastName:=args[1]
-		patientAdhaarNo:=args[2]
-		patientDOB:=args[3]
-		patientCreationDate:= time.Now().Local().Format("2006-01-02")
-		patientCreatedBy:= "TestUser1"
-		patientLastUpdatedOn:= time.Now().Local().Format("2006-01-02")
-		patientLastUpdatedBy:= "TestUser1"
+		medicalRecordID:= strconv.Itoa(rand.Intn(1000000000))
+		medicalRecord_PatientID:=args[0]
+		medicalRecordHopsitalName:=args[1]
+		medicalRecordHospitalRegistrationID:=args[2]
+		medicalRecordHospitalizationStartDate:=args[3]
+		medicalRecordHospitalizationDischargeDate:=args[4]
+		medicalRecordDiagnosis:=args[5]
+		medicalRecordTreatment:=args[6]
+		medicalRecordDoctorFirstName:=args[7]
+		medicalRecordDoctorLastName:=args[8]
+		medicalRecordDoctorRegistrationNumber:=args[9]
+		medicalRecordCreationDate:= time.Now().Local().Format("2006-01-02")
+		medicalRecordCreatedBy:= "TestUser1"
+		medicalRecordLastUpdatedOn:= time.Now().Local().Format("2006-01-02")
+		medicalRecordLastUpdatedBy:= "TestUser1"
 
 		// Insert a row
-		ok, err := stub.InsertRow("Patient", shim.Row{
+		ok, err := stub.InsertRow("MedicalRecord", shim.Row{
 			Columns: []*shim.Column{
-				&shim.Column{Value: &shim.Column_String_{String_: patientId}},
-				&shim.Column{Value: &shim.Column_String_{String_: patientFirstName}},
-				&shim.Column{Value: &shim.Column_String_{String_: patientLastName}},
-				&shim.Column{Value: &shim.Column_String_{String_: patientAdhaarNo}},
-				&shim.Column{Value: &shim.Column_String_{String_: patientDOB}},
-				&shim.Column{Value: &shim.Column_String_{String_: patientCreationDate}},
-				&shim.Column{Value: &shim.Column_String_{String_: patientCreatedBy}},
-				&shim.Column{Value: &shim.Column_String_{String_: patientLastUpdatedOn}},
-				&shim.Column{Value: &shim.Column_String_{String_: patientLastUpdatedBy}},
+				&shim.Column{Value: &shim.Column_String_{String_: medicalRecordID}},
+				&shim.Column{Value: &shim.Column_String_{String_: medicalRecord_PatientID}},
+				&shim.Column{Value: &shim.Column_String_{String_: medicalRecordHopsitalName}},
+				&shim.Column{Value: &shim.Column_String_{String_: medicalRecordHospitalRegistrationID}},
+				&shim.Column{Value: &shim.Column_String_{String_: medicalRecordHospitalizationStartDate}},
+				&shim.Column{Value: &shim.Column_String_{String_: medicalRecordHospitalizationDischargeDate}},
+				&shim.Column{Value: &shim.Column_String_{String_: medicalRecordDiagnosis}},
+				&shim.Column{Value: &shim.Column_String_{String_: medicalRecordTreatment}},
+				&shim.Column{Value: &shim.Column_String_{String_: medicalRecordDoctorFirstName}},
+				&shim.Column{Value: &shim.Column_String_{String_: medicalRecordDoctorLastName}},
+				&shim.Column{Value: &shim.Column_String_{String_: medicalRecordDoctorRegistrationNumber}},
+				&shim.Column{Value: &shim.Column_String_{String_: medicalRecordCreationDate}},
+				&shim.Column{Value: &shim.Column_String_{String_: medicalRecordCreatedBy}},
+				&shim.Column{Value: &shim.Column_String_{String_: medicalRecordLastUpdatedOn}},
+				&shim.Column{Value: &shim.Column_String_{String_: medicalRecordLastUpdatedBy}},
 			}})
 
 		if err != nil {
@@ -206,6 +244,49 @@ func (t *SimpleChaincode) updatePatient(stub shim.ChaincodeStubInterface, args [
 
 }
 
+
+//Create Patient
+func (t *SimpleChaincode) createPatient(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+if len(args) != 4 {
+			return nil, fmt.Errorf("Incorrect number of arguments. Expecting 4. Got: %d.", len(args))
+		}
+
+		patientId:= strconv.Itoa(rand.Intn(1000000000))
+		patientFirstName:=args[0]
+		patientLastName:=args[1]
+		patientAdhaarNo:=args[2]
+		patientDOB:=args[3]
+		patientCreationDate:= time.Now().Local().Format("2006-01-02")
+		patientCreatedBy:= "TestUser1"
+		patientLastUpdatedOn:= time.Now().Local().Format("2006-01-02")
+		patientLastUpdatedBy:= "TestUser1"
+
+		// Insert a row
+		ok, err := stub.InsertRow("Patient", shim.Row{
+			Columns: []*shim.Column{
+				&shim.Column{Value: &shim.Column_String_{String_: patientId}},
+				&shim.Column{Value: &shim.Column_String_{String_: patientFirstName}},
+				&shim.Column{Value: &shim.Column_String_{String_: patientLastName}},
+				&shim.Column{Value: &shim.Column_String_{String_: patientAdhaarNo}},
+				&shim.Column{Value: &shim.Column_String_{String_: patientDOB}},
+				&shim.Column{Value: &shim.Column_String_{String_: patientCreationDate}},
+				&shim.Column{Value: &shim.Column_String_{String_: patientCreatedBy}},
+				&shim.Column{Value: &shim.Column_String_{String_: patientLastUpdatedOn}},
+				&shim.Column{Value: &shim.Column_String_{String_: patientLastUpdatedBy}},
+			}})
+
+		if err != nil {
+			return nil, err 
+		}
+		if !ok && err == nil {
+			return nil, errors.New("Row already exists.")
+		}
+			
+		return nil, nil
+
+}
+
+
 // Invoke callback representing the invocation of a chaincode
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Printf("Invoke called, determining function")
@@ -220,6 +301,9 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 	} else if function == "updatePatient" {
 		fmt.Printf("Function is updatePatient")
 		return t.updatePatient(stub, args)
+	} else if function == "createMedicalRecord" {
+		fmt.Printf("Function is createMedicalRecord")
+		return t.createMedicalRecord(stub, args)
 	} 
 
 	return nil, errors.New("Received unknown function invocation")
@@ -238,9 +322,163 @@ func (t* SimpleChaincode) Run(stub shim.ChaincodeStubInterface, function string,
 	} else if function == "updatePatient" {
 		fmt.Printf("Function is updatePatient")
 		return t.updatePatient(stub, args)
+	} else if function == "createMedicalRecord" {
+		fmt.Printf("Function is createMedicalRecord")
+		return t.createMedicalRecord(stub, args)
 	} 
 
 	return nil, errors.New("Received unknown function invocation")
+}
+
+
+
+
+
+//get all Medical Records
+func (t *SimpleChaincode) getAllMedicalRecords(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {	
+var columns []shim.Column
+
+	rows, err := stub.GetRows("MedicalRecord", columns)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to retrieve row")
+	}
+ 
+   
+		
+	res2E:= []*MedicalRecord{}	
+	
+	for row := range rows {		
+		newApp:= new(MedicalRecord)
+		newApp.MedicalRecordID = row.Columns[0].GetString_()
+		newApp.MedicalRecord_PatientID = row.Columns[1].GetString_()
+		newApp.MedicalRecordHopsitalName = row.Columns[2].GetString_()
+		newApp.MedicalRecordHospitalRegistrationID = row.Columns[3].GetString_()
+		newApp.MedicalRecordHospitalizationStartDate = row.Columns[4].GetString_()
+		newApp.MedicalRecordHospitalizationDischargeDate = row.Columns[5].GetString_()
+		newApp.MedicalRecordDiagnosis = row.Columns[6].GetString_()
+		newApp.MedicalRecordTreatment = row.Columns[7].GetString_()
+		newApp.MedicalRecordDoctorFirstName = row.Columns[8].GetString_()
+		newApp.MedicalRecordDoctorLastName = row.Columns[9].GetString_()
+		newApp.MedicalRecordDoctorRegistrationNumber = row.Columns[10].GetString_()
+		newApp.MedicalRecordCreationDate = row.Columns[11].GetString_()
+		newApp.MedicalRecordCreatedBy = row.Columns[12].GetString_()
+		newApp.MedicalRecordLastUpdatedOn = row.Columns[13].GetString_()
+		newApp.MedicalRecordCreatedBy = row.Columns[14].GetString_()
+		newApp.MedicalRecordLastUpdatedBy = row.Columns[15].GetString_()
+		
+		if len(newApp.MedicalRecordID) > 0{
+		res2E=append(res2E,newApp)		
+		}				
+	}
+	
+    mapB, _ := json.Marshal(res2E)
+    fmt.Println(string(mapB))
+	
+	return mapB, nil
+
+}
+
+//get the Patient against ID
+func (t *SimpleChaincode) getMedicalRecordByID(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+
+	if len(args) != 1 {
+		return nil, errors.New("Incorrect number of arguments. Expecting MedicalRecordID to query")
+	}
+
+	medicalRecordID := args[0]
+	
+
+	// Get the row pertaining to this assemblyLineID
+	var columns []shim.Column
+	col1 := shim.Column{Value: &shim.Column_String_{String_: medicalRecordID}}
+	columns = append(columns, col1)
+
+	row, err := stub.GetRow("MedicalRecord", columns)
+	if err != nil {
+		jsonResp := "{\"Error\":\"Failed to get the data for the MedicalRecordID " + medicalRecordID + "\"}"
+		return nil, errors.New(jsonResp)
+	}
+
+	// GetRows returns empty message if key does not exist
+	if len(row.Columns) == 0 {
+		jsonResp := "{\"Error\":\"Failed to get the data for the medicalRecordID " + medicalRecordID + "\"}"
+		return nil, errors.New(jsonResp)
+	}
+
+//Creating a Struct before Marshal
+		newApp:= new(MedicalRecord)
+		newApp.MedicalRecordID = row.Columns[0].GetString_()
+		newApp.MedicalRecord_PatientID = row.Columns[1].GetString_()
+		newApp.MedicalRecordHopsitalName = row.Columns[2].GetString_()
+		newApp.MedicalRecordHospitalRegistrationID = row.Columns[3].GetString_()
+		newApp.MedicalRecordHospitalizationStartDate = row.Columns[4].GetString_()
+		newApp.MedicalRecordHospitalizationDischargeDate = row.Columns[5].GetString_()
+		newApp.MedicalRecordDiagnosis = row.Columns[6].GetString_()
+		newApp.MedicalRecordTreatment = row.Columns[7].GetString_()
+		newApp.MedicalRecordDoctorFirstName = row.Columns[8].GetString_()
+		newApp.MedicalRecordDoctorLastName = row.Columns[9].GetString_()
+		newApp.MedicalRecordDoctorRegistrationNumber = row.Columns[10].GetString_()
+		newApp.MedicalRecordCreationDate = row.Columns[11].GetString_()
+		newApp.MedicalRecordCreatedBy = row.Columns[12].GetString_()
+		newApp.MedicalRecordLastUpdatedOn = row.Columns[13].GetString_()
+		newApp.MedicalRecordCreatedBy = row.Columns[14].GetString_()
+		newApp.MedicalRecordLastUpdatedBy = row.Columns[15].GetString_()
+	
+    mapB, _ := json.Marshal(newApp)
+    fmt.Println(string(mapB))
+	
+	return mapB, nil
+
+}
+
+//get Medical Record by patient ID
+// Returns empty string if no records not found
+func (t *SimpleChaincode) getMedicalRecordByPatientID(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {	
+var columns []shim.Column
+
+	
+	if len(args) != 1 {
+		return nil, errors.New("Incorrect number of arguments. Expecting PatientID to query")
+	}
+
+	_patientID := args[0]
+	
+	rows, err := stub.GetRows("MedicalRecord", columns)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to retrieve row")
+	}
+		
+	res2E:= []*MedicalRecord{}	
+	
+	for row := range rows {		
+		newApp:= new(MedicalRecord)
+		newApp.MedicalRecordID = row.Columns[0].GetString_()
+		newApp.MedicalRecord_PatientID = row.Columns[1].GetString_()
+		newApp.MedicalRecordHopsitalName = row.Columns[2].GetString_()
+		newApp.MedicalRecordHospitalRegistrationID = row.Columns[3].GetString_()
+		newApp.MedicalRecordHospitalizationStartDate = row.Columns[4].GetString_()
+		newApp.MedicalRecordHospitalizationDischargeDate = row.Columns[5].GetString_()
+		newApp.MedicalRecordDiagnosis = row.Columns[6].GetString_()
+		newApp.MedicalRecordTreatment = row.Columns[7].GetString_()
+		newApp.MedicalRecordDoctorFirstName = row.Columns[8].GetString_()
+		newApp.MedicalRecordDoctorLastName = row.Columns[9].GetString_()
+		newApp.MedicalRecordDoctorRegistrationNumber = row.Columns[10].GetString_()
+		newApp.MedicalRecordCreationDate = row.Columns[11].GetString_()
+		newApp.MedicalRecordCreatedBy = row.Columns[12].GetString_()
+		newApp.MedicalRecordLastUpdatedOn = row.Columns[13].GetString_()
+		newApp.MedicalRecordCreatedBy = row.Columns[14].GetString_()
+		newApp.MedicalRecordLastUpdatedBy = row.Columns[15].GetString_()
+		
+		if newApp.MedicalRecord_PatientID == _patientID {
+		res2E=append(res2E,newApp)		
+		}					
+	}
+	
+    mapB, _ := json.Marshal(res2E)
+    fmt.Println(string(mapB))
+	
+	return mapB, nil
+
 }
 
 
@@ -384,6 +622,15 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 	} else if function == "getPatientByID" { 
 		t := SimpleChaincode{}
 		return t.getPatientByID(stub, args)
+	} else if function == "getAllMedicalRecords" { 
+		t := SimpleChaincode{}
+		return t.getAllMedicalRecords(stub, args)
+	} else if function == "getMedicalRecordByID" { 
+		t := SimpleChaincode{}
+		return t.getMedicalRecordByID(stub, args)
+	} else if function == "getMedicalRecordByPatientID" { 
+		t := SimpleChaincode{}
+		return t.getMedicalRecordByPatientID(stub, args)
 	}
 	
 	return nil, errors.New("Received unknown function query")
