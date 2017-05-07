@@ -84,26 +84,13 @@ type MedicalBillSettlement struct{
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Printf("Init called, initializing chaincode")
 	
-	
-	// Create Patient Table
-	err := stub.CreateTable("Patient", []*shim.ColumnDefinition{
-		&shim.ColumnDefinition{Name: "patientId", Type: shim.ColumnDefinition_STRING, Key: true},
-		&shim.ColumnDefinition{Name: "patientFirstName", Type: shim.ColumnDefinition_STRING, Key: false},
-		&shim.ColumnDefinition{Name: "patientLastName", Type: shim.ColumnDefinition_STRING, Key: false},
-		&shim.ColumnDefinition{Name: "patientAdhaarNo", Type: shim.ColumnDefinition_STRING, Key: false},
-		&shim.ColumnDefinition{Name: "patientDOB", Type: shim.ColumnDefinition_STRING, Key: false},
-		&shim.ColumnDefinition{Name: "patientCreationDate", Type: shim.ColumnDefinition_STRING, Key: false},
-		&shim.ColumnDefinition{Name: "patientCreatedBy", Type: shim.ColumnDefinition_STRING, Key: false},
-		&shim.ColumnDefinition{Name: "patientLastUpdatedOn", Type: shim.ColumnDefinition_STRING, Key: false},
-		&shim.ColumnDefinition{Name: "patientLastUpdatedBy", Type: shim.ColumnDefinition_STRING, Key: false},
-
-	})
-	if err != nil {
-		return nil, errors.New("Failed creating Patient.")
+	// Check if table already exists
+	_, err := stub.GetTable("MedicalRecord")
+	if err == nil {
+		// Table already exists; do not recreate
+		return nil, nil
 	}
-
-
-// Create Medical Record Table
+	// Create Medical Record Table
 	err = stub.CreateTable("MedicalRecord", []*shim.ColumnDefinition{
 		&shim.ColumnDefinition{Name: "medicalRecordID", Type: shim.ColumnDefinition_STRING, Key: true},
 		&shim.ColumnDefinition{Name: "medicalRecord_PatientID", Type: shim.ColumnDefinition_STRING, Key: false},
@@ -126,7 +113,28 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 		return nil, errors.New("Failed creating MedicalRecord.")
 	}
 
+	// Check if table already exists
+	_, err = stub.GetTable("Patient")
+	if err == nil {
+		// Table already exists; do not recreate
+		return nil, nil
+	}
+	// Create Patient Table
+	err = stub.CreateTable("Patient", []*shim.ColumnDefinition{
+		&shim.ColumnDefinition{Name: "patientId", Type: shim.ColumnDefinition_STRING, Key: true},
+		&shim.ColumnDefinition{Name: "patientFirstName", Type: shim.ColumnDefinition_STRING, Key: false},
+		&shim.ColumnDefinition{Name: "patientLastName", Type: shim.ColumnDefinition_STRING, Key: false},
+		&shim.ColumnDefinition{Name: "patientAdhaarNo", Type: shim.ColumnDefinition_STRING, Key: false},
+		&shim.ColumnDefinition{Name: "patientDOB", Type: shim.ColumnDefinition_STRING, Key: false},
+		&shim.ColumnDefinition{Name: "patientCreationDate", Type: shim.ColumnDefinition_STRING, Key: false},
+		&shim.ColumnDefinition{Name: "patientCreatedBy", Type: shim.ColumnDefinition_STRING, Key: false},
+		&shim.ColumnDefinition{Name: "patientLastUpdatedOn", Type: shim.ColumnDefinition_STRING, Key: false},
+		&shim.ColumnDefinition{Name: "patientLastUpdatedBy", Type: shim.ColumnDefinition_STRING, Key: false},
 
+	})
+	if err != nil {
+		return nil, errors.New("Failed creating Patient.")
+	}
 
 	return nil, nil
 }
@@ -134,7 +142,8 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 
 //Create Patient
 func (t *SimpleChaincode) createMedicalRecord(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-if len(args) != 10 {
+
+	if len(args) != 10 {
 			return nil, fmt.Errorf("Incorrect number of arguments. Expecting 10. Got: %d.", len(args))
 		}
 
@@ -247,7 +256,7 @@ func (t *SimpleChaincode) updatePatient(stub shim.ChaincodeStubInterface, args [
 
 //Create Patient
 func (t *SimpleChaincode) createPatient(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-if len(args) != 4 {
+	if len(args) != 4 {
 			return nil, fmt.Errorf("Incorrect number of arguments. Expecting 4. Got: %d.", len(args))
 		}
 
@@ -336,7 +345,7 @@ func (t* SimpleChaincode) Run(stub shim.ChaincodeStubInterface, function string,
 
 //get all Medical Records
 func (t *SimpleChaincode) getAllMedicalRecords(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {	
-var columns []shim.Column
+	var columns []shim.Column
 
 	rows, err := stub.GetRows("MedicalRecord", columns)
 	if err != nil {
