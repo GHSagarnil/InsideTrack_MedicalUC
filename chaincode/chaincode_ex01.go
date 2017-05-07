@@ -388,7 +388,7 @@ func (t *SimpleChaincode) getAllMedicalRecords(stub shim.ChaincodeStubInterface,
 }
 
 //get the Patient against ID
-func (t *SimpleChaincode) getMedicalRecordByID(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+func (t *SimpleChaincode) getMedicalRecordByID(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {	
 
 	if len(args) != 1 {
 		return nil, errors.New("Incorrect number of arguments. Expecting MedicalRecordID to query")
@@ -414,7 +414,7 @@ func (t *SimpleChaincode) getMedicalRecordByID(stub shim.ChaincodeStubInterface,
 		return nil, errors.New(jsonResp)
 	}
 
-//Creating a Struct before Marshal
+	//Creating a Struct before Marshal
 		newApp:= new(MedicalRecord)
 		newApp.MedicalRecordID = row.Columns[0].GetString_()
 		newApp.MedicalRecord_PatientID = row.Columns[1].GetString_()
@@ -441,9 +441,85 @@ func (t *SimpleChaincode) getMedicalRecordByID(stub shim.ChaincodeStubInterface,
 }
 
 //get Medical Record by patient ID
+// Returns empty string if no records are found
+func (t *SimpleChaincode) getMedicalRecordByPatientAdhaarNumber(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {	
+	var columns []shim.Column
+
+	
+	//Get PatientID based on Adhaar Number 
+	if len(args) != 1 {
+			return nil, errors.New("Incorrect number of arguments. Expecting PatientAdhaarNumber to query")
+		}
+
+		_patientAdhaarNumber := args[0]
+		_patientID:= ""
+
+		rowsP, err := stub.GetRows("Patient", columns)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to retrieve row")
+		}
+			
+		for rowP := range rowsP {		
+			newAppP:= new(Patient)
+			newAppP.PatientId = rowP.Columns[0].GetString_()
+			newAppP.PatientFirstName = rowP.Columns[1].GetString_()
+			newAppP.PatientLastName = rowP.Columns[2].GetString_()
+			newAppP.PatientAdhaarNo = rowP.Columns[3].GetString_()
+			newAppP.PatientDOB = rowP.Columns[4].GetString_()
+			newAppP.PatientCreationDate = rowP.Columns[5].GetString_()
+			newAppP.PatientCreatedBy = rowP.Columns[6].GetString_()
+			newAppP.PatientLastUpdatedOn = rowP.Columns[7].GetString_()
+			newAppP.PatientLastUpdatedBy = rowP.Columns[8].GetString_()
+			
+			if newAppP.PatientAdhaarNo == _patientAdhaarNumber {
+			_patientID = newAppP.PatientId
+			}					
+		}
+
+	// Get the Medical Records by PatientID
+	rows, err := stub.GetRows("MedicalRecord", columns)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to retrieve row")
+	}
+		
+	res2E:= []*MedicalRecord{}	
+	
+	for row := range rows {		
+		newApp:= new(MedicalRecord)
+		newApp.MedicalRecordID = row.Columns[0].GetString_()
+		newApp.MedicalRecord_PatientID = row.Columns[1].GetString_()
+		newApp.MedicalRecordHopsitalName = row.Columns[2].GetString_()
+		newApp.MedicalRecordHospitalRegistrationID = row.Columns[3].GetString_()
+		newApp.MedicalRecordHospitalizationStartDate = row.Columns[4].GetString_()
+		newApp.MedicalRecordHospitalizationDischargeDate = row.Columns[5].GetString_()
+		newApp.MedicalRecordDiagnosis = row.Columns[6].GetString_()
+		newApp.MedicalRecordTreatment = row.Columns[7].GetString_()
+		newApp.MedicalRecordDoctorFirstName = row.Columns[8].GetString_()
+		newApp.MedicalRecordDoctorLastName = row.Columns[9].GetString_()
+		newApp.MedicalRecordDoctorRegistrationNumber = row.Columns[10].GetString_()
+		newApp.MedicalRecordCreationDate = row.Columns[11].GetString_()
+		newApp.MedicalRecordCreatedBy = row.Columns[12].GetString_()
+		newApp.MedicalRecordLastUpdatedOn = row.Columns[13].GetString_()
+		newApp.MedicalRecordCreatedBy = row.Columns[14].GetString_()
+		newApp.MedicalRecordLastUpdatedBy = row.Columns[15].GetString_()
+		
+		if newApp.MedicalRecord_PatientID == _patientID {
+		res2E=append(res2E,newApp)		
+		}					
+	}
+	
+    mapB, _ := json.Marshal(res2E)
+    fmt.Println(string(mapB))
+	
+	return mapB, nil
+
+}
+
+
+//get Medical Record by patient ID
 // Returns empty string if no records not found
 func (t *SimpleChaincode) getMedicalRecordByPatientID(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {	
-var columns []shim.Column
+	var columns []shim.Column
 
 	
 	if len(args) != 1 {
@@ -490,10 +566,9 @@ var columns []shim.Column
 
 }
 
-
 //get all Patients
 func (t *SimpleChaincode) getAllPatients(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {	
-var columns []shim.Column
+	var columns []shim.Column
 
 	rows, err := stub.GetRows("Patient", columns)
 	if err != nil {
@@ -555,7 +630,7 @@ func (t *SimpleChaincode) getPatientByID(stub shim.ChaincodeStubInterface, args 
 		return nil, errors.New(jsonResp)
 	}
 
-//Creating a Struct before Marshal
+	//Creating a Struct before Marshal
 		newApp:= new(Patient)
 		newApp.PatientId = row.Columns[0].GetString_()
 		newApp.PatientFirstName = row.Columns[1].GetString_()
@@ -578,7 +653,7 @@ func (t *SimpleChaincode) getPatientByID(stub shim.ChaincodeStubInterface, args 
 //get Patient by Adhaar Number
 // Returns empty string if not found
 func (t *SimpleChaincode) getPatientByAdhaarNumber(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {	
-var columns []shim.Column
+	var columns []shim.Column
 
 	
 	if len(args) != 1 {
@@ -640,6 +715,9 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 	} else if function == "getMedicalRecordByPatientID" { 
 		t := SimpleChaincode{}
 		return t.getMedicalRecordByPatientID(stub, args)
+	} else if function == "getMedicalRecordByPatientAdhaarNumber" { 
+		t := SimpleChaincode{}
+		return t.getMedicalRecordByPatientAdhaarNumber(stub, args)
 	}
 	
 	return nil, errors.New("Received unknown function query")
