@@ -308,8 +308,19 @@ func (t *SimpleChaincode) getPatientByID(stub shim.ChaincodeStubInterface, args 
 		return nil, errors.New(jsonResp)
 	}
 
-	//return []byte (row), nil
-	 mapB, _ := json.Marshal(row)
+//Creating a Struct before Marshal
+		newApp:= new(Patient)
+		newApp.PatientId = row.Columns[0].GetString_()
+		newApp.PatientFirstName = row.Columns[1].GetString_()
+		newApp.PatientLastName = row.Columns[2].GetString_()
+		newApp.PatientAdhaarNo = row.Columns[3].GetString_()
+		newApp.PatientDOB = row.Columns[4].GetString_()
+		newApp.PatientCreationDate = row.Columns[5].GetString_()
+		newApp.PatientCreatedBy = row.Columns[6].GetString_()
+		newApp.PatientLastUpdatedOn = row.Columns[7].GetString_()
+		newApp.PatientLastUpdatedBy = row.Columns[8].GetString_()
+	
+    mapB, _ := json.Marshal(newApp)
     fmt.Println(string(mapB))
 	
 	return mapB, nil
