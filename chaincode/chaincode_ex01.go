@@ -109,7 +109,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 
 	fmt.Printf("Init called, initializing chaincode")
 
-//user_type1_0,AsemblyLine,user_type2_0, PackageLine
+//user_type1_0,regulator,user_type2_0, PackageLine
 	for i:=0; i < len(args); i=i+2 {
 		t.add_ecert(stub, args[i], args[i+1])
 	}
@@ -228,6 +228,31 @@ func (t *SimpleChaincode) check_affiliation(stub shim.ChaincodeStubInterface) (s
 
 }
 
+
+//==============================================================================================================================
+//	 get_caller - Retrieves the username of the user who invoked the chaincode.
+//				  Returns the username as a string.
+//==============================================================================================================================
+
+func (t *SimpleChaincode) get_usernameB(stub shim.ChaincodeStubInterface) ([]byte, error) {
+
+    username, err := stub.ReadCertAttribute("username");
+	if err != nil { return nil, errors.New("Couldn't get attribute 'username'. Error: " + err.Error()) }
+	return []byte (string(username)), nil
+}
+
+//==============================================================================================================================
+//	 check_affiliation - Takes an ecert as a string, decodes it to remove html encoding then parses it and checks the
+// 				  		certificates common name. The affiliation is stored as part of the common name.
+//==============================================================================================================================
+
+func (t *SimpleChaincode) check_affiliationB(stub shim.ChaincodeStubInterface) ([] byte, error) {
+    affiliation, err := stub.ReadCertAttribute("role");
+	if err != nil { return nil, errors.New("Couldn't get attribute 'role'. Error: " + err.Error()) }
+	return [] byte (string(affiliation)), nil
+
+}
+
 //==============================================================================================================================
 //	 get_caller_data - Calls the get_ecert and check_role functions and returns the ecert and role for the
 //					 name passed.
@@ -250,11 +275,19 @@ func (t *SimpleChaincode) get_caller_data(stub shim.ChaincodeStubInterface) (str
 	return user, affiliation, nil
 }
 
+
+
 //Create Patient
 func (t *SimpleChaincode) createMedicalRecord(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 
+ 	affiliation, err := stub.ReadCertAttribute("role");
+	if err != nil { return nil, errors.New("Couldn't get attribute 'role'. Error: " + err.Error()) }
+
+    username, err := stub.ReadCertAttribute("username");
+	if err != nil { return nil, errors.New("Couldn't get attribute 'username'. Error: " + err.Error()) }
+
 	if len(args) != 10 {
-			return nil, fmt.Errorf("Incorrect number of arguments. Expecting 10. Got: %d.", len(args))
+			return nil, fmt.Errorf("Inside createMedicalRecord. affiliation = %v. username = %v", string(affiliation),string(username))
 		}
 
 		medicalRecordID:= strconv.Itoa(rand.Intn(1000000000))
@@ -444,20 +477,20 @@ func (t *SimpleChaincode) TestCaller(stub shim.ChaincodeStubInterface) ([]byte, 
 
 	if     	caller_affiliation		== AUTHORITY	{		
 		// If the roles and users are ok
-		fmt.Printf("AUTHORITY_TO_MANUFACTURER: Permission provided");
 		return nil, errors.New(fmt.Sprintf("Function If authority_to_manufacturer called. %v %v ",caller,caller_affiliation))
 
 	} else {									
 		// Otherwise if there is an error
-		fmt.Printf("AUTHORITY_TO_MANUFACTURER: Permission Denied");
 		return nil, errors.New(fmt.Sprintf("Function Else authority_to_manufacturer called. %v %v ",caller,caller_affiliation))
 
 
 	}
-	return nil, nil									
+	return nil, errors.New(fmt.Sprintf("Function Ends authority_to_manufacturer called. %v %v ",caller,caller_affiliation))									
 	// We are Done
 
 }
+
+
 
 
 func (t* SimpleChaincode) Run(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
@@ -858,13 +891,12 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 		return t.getMedicalRecordByPatientAdhaarNumber(stub, args)
 	}  else if function == "get_ecert" {
 		return t.get_ecert(stub, args[0])
-	}   
-	/*else if function == "get_username" {
-		return t.get_username(stub)
-	}   else if function == "check_affiliation" {
-		return t.check_affiliation(stub)
+	}  else if function == "get_usernameB" {
+		return t.get_usernameB(stub)
+	}   else if function == "check_affiliationB" {
+		return t.check_affiliationB(stub)
 	} 
-	*/
+	
 	
 	return nil, errors.New("Received unknown function query")
 }
