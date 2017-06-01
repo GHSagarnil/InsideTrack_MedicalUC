@@ -424,7 +424,7 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 		fmt.Printf("Function is createMedicalRecord")
 		return t.createMedicalRecord(stub, args)
 	} else if function == "TestCaller" { 
-		return t.TestCaller(stub,caller,caller_affiliation)
+		return t.TestCaller(stub)
 	} else if function == "add_ecert" {
 		fmt.Printf("Function is add_ecert")
 		return t.add_ecert(stub, args[0], args[1])
